@@ -1,95 +1,86 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { PrismaClient } from "@prisma/client"; // Correct import
+import Link from "next/link";
+import Post from "./components/Post";
 
-export default function Home() {
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+async function getPost() {
+  // Correctly use prisma.post to query the posts
+  const posts = await prisma.post.findMany({
+    where: { published: true },
+    include: {
+      author: {
+        select: { name: true }
+      }
+    }
+  });
+  return posts;
+}
+
+export default async function Home() {
+  const posts = await getPost();
+  console.log({ posts });
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main style={styles.main}>
+      <h1>Hi, Sabrine Omar</h1>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      {/* Centered Add Post Link */}
+      <div style={styles.addPostContainer}>
+        <Link href={'/add-post'} style={styles.addPostLink}>
+          Add Post
+        </Link>
+      </div>
+
+      {/* Posts */}
+      <div style={styles.postsContainer}>
+        {posts.map((post) => (
+          <Post
+            key={post.id}
+            id={post.id}
+            title={post.title}
+            content={post.content}
+            authorName={post.author?.name} // Accessing author name correctly
           />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        ))}
+      </div>
+    </main>
   );
 }
+
+const styles = {
+  main: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center", // Centers content horizontally
+    justifyContent: "flex-start", // Aligns content at the top
+    minHeight: "100vh",
+    padding: "20px",
+  },
+  addPostContainer: {
+    margin: "20px 0", // Adds space around the link
+    textAlign: "center",
+  },
+  addPostLink: {
+  
+    color: "#007bff",
+    padding: "10px 20px",
+    borderRadius: "5px",
+    textDecoration: "none",
+    fontSize: "16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s",
+  },
+  addPostLinkHover: {
+    backgroundColor: "#0056b3", // Change background color on hover
+  },
+  postsContainer: {
+    width: "100%",
+    maxWidth: "800px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px", // Adds space between each post
+  },
+};
